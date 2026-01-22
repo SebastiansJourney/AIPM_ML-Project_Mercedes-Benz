@@ -1,0 +1,8 @@
+Original dataset shape: (4209, 378)
+Removed column: ID (governance / leakage risk)
+Categorical features retained: 8
+Binary features before cleaning: 368
+Removed 12 inactive binary features (always 0)
+Active binary features retained: 356
+Target variable y preserved without modification
+Final dataset shape: (4209, 365)
