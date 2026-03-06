@@ -1,103 +1,152 @@
-# Mercedes-Benz Greener Manufacturing: Time-to-Test Prediction
+# 🏎️ Mercedes-Benz Greener Manufacturing: Time-to-Test Prediction
 
-![Status](https://img.shields.io/badge/Status-In_Progress-yellow) ![Python](https://img.shields.io/badge/Python-3.x-blue) ![Type](https://img.shields.io/badge/ML-Regression-green)
+> A team ML project applying end-to-end product management methodology to a real Kaggle regression challenge — predicting vehicle test bench duration to reduce manufacturing bottlenecks and emissions.
+
+[![Python](https://img.shields.io/badge/Python-3.11.3-3776AB?logo=python&logoColor=white)](https://python.org)
+[![scikit-learn](https://img.shields.io/badge/ML-scikit--learn-F7931E?logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
+[![XGBoost](https://img.shields.io/badge/ML-XGBoost-189fdd)](https://xgboost.readthedocs.io)
+[![Kaggle](https://img.shields.io/badge/Data-Kaggle-20BEFF?logo=kaggle)](https://www.kaggle.com/c/mercedes-benz-greener-manufacturing)
+
+---
 
 ## 1. Non-Technical Executive Summary
-**Project Context & Financial Impact**
-In the automotive industry, the final testing phase is a critical but costly bottleneck. Every minute a premium vehicle spends on the test bench represents a direct accumulation of operational expense (OpEx) and a delay in revenue realization. Mercedes-Benz has launched this initiative to streamline that process. By leveraging an anonymized dataset representing different permutation of car features, we aim to accurately predict the testing duration (`y`) for any given vehicle configuration.
 
-**Objectives & Value Proposition**
-The primary objective of this project is to build a regression model that minimizes the error in predicting test bench time. From a financial perspective, a high-performing model allows for **Just-In-Time (JIT) resource allocation**—reducing the idle time of expensive testing machinery and labor. Furthermore, optimizing this process directly supports sustainability goals by reducing the carbon emissions associated with extended testing cycles, aligning technical efficiency with corporate social responsibility (CSR) targets.
+In automotive manufacturing, the final testing phase is a critical but costly bottleneck. Every minute a premium vehicle spends on the test bench accumulates operational expense (OpEx) and delays revenue realization.
+
+This project builds a regression model to predict test bench duration for any given vehicle configuration. A high-performing model enables **Just-in-Time (JIT) resource allocation** — reducing idle time of expensive testing machinery and labor — while directly supporting sustainability goals by minimising the carbon emissions associated with extended testing cycles.
+
+**This repo documents not just the ML work, but the full PM process behind it** — from PRD and OKR mapping through model experimentation to post-launch planning.
 
 ---
 
 ## 2. Product Requirements Document (PRD)
-*Defining the "Why" and "Who" before the "How".*
 
 | Component | Definition |
-| :--- | :--- |
-| **Problem Statement** | Testing cars takes variable time, creating bottlenecks in production and increasing emissions. |
-| **User Persona** | **Production Planning Manager:** Needs accurate forecasts to schedule workers and test benches efficiently to minimize downtime. |
-| **In-Scope** | Predicting testing time (seconds) for anonymized vehicle configurations. |
-| **Out-of-Scope** | Predicting mechanical failures or optimizing the car features themselves. |
-| **Constraints** | Data is fully anonymized; computation must be efficient enough for batch prediction. |
+|---|---|
+| **Problem Statement** | Testing cars takes variable time, creating bottlenecks in production and increasing emissions |
+| **User Persona** | Production Planning Manager — needs accurate forecasts to schedule workers and test benches efficiently |
+| **In-Scope** | Predicting testing time (seconds) for anonymized vehicle configurations |
+| **Out-of-Scope** | Predicting mechanical failures or optimizing car features themselves |
+| **Constraints** | Data is fully anonymized; computation must be efficient enough for batch prediction |
 
 ---
 
-## 3. KPI & OKR Mapping
-*Bridging Model Performance to Business Success.*
+## 3. OKR & KPI Mapping
 
-* **Primary Business Objective (OKR):** Reduce average vehicle testing dwell time by X% in Q4 to improve inventory turnover.
-* **Supporting KPIs:**
-    * **Throughput:** Cars tested per hour (Financial Driver: Revenue Velocity).
-    * **Scheduling Accuracy:** % of tests completed within the predicted time window (Financial Driver: Labor Utilization).
-* **ML-to-Product Metric Mapping:**
-    * *If Model R² increases* $\rightarrow$ *Variance in prediction decreases* $\rightarrow$ *Scheduling buffers can be tightened* $\rightarrow$ *OpEx per unit decreases.*
+**Primary Business Objective (OKR):** Reduce average vehicle testing dwell time to improve inventory turnover.
+
+**Supporting KPIs:**
+
+| KPI | Financial Driver |
+|---|---|
+| Cars tested per hour (throughput) | Revenue velocity |
+| % of tests completed within predicted window | Labor utilization |
+| OpEx per unit tested | Cost efficiency |
+
+**ML-to-Product Metric Chain:**
+```
+Model R² increases
+    → Prediction variance decreases
+    → Scheduling buffers can be tightened
+    → OpEx per unit decreases
+```
 
 ---
 
-## 4. Data Understanding & EDA Summary
-*See `notebooks/01_EDA.ipynb` for full analysis.*
+## 4. Data Understanding & EDA
 
-* **Data Sources:** Kaggle Competition Dataset (anonymized car features).
-* **Key Insights:**
-    * [TODO: Insert insight on Target Variable Distribution from EDA]
-    * [TODO: Insert insight on Binary Feature Sparsity from EDA]
-* **Data Gaps & Risks:**
-    * **Anonymity:** We cannot validate feature meaning (e.g., is "Feature X" a safety sensor?), limiting interpretability.
-    * **Feasibility Assessment:** [TODO: GO/NO-GO Decision based on signal-to-noise ratio].
+**Data Source:** [Kaggle — Mercedes-Benz Greener Manufacturing](https://www.kaggle.com/c/mercedes-benz-greener-manufacturing)
+
+The dataset contains anonymized vehicle configurations (binary and categorical features) mapped to test bench duration in seconds.
+
+**Key characteristics:**
+- Target variable (`y`): continuous, right-skewed distribution — most cars test quickly, with a long tail of complex configurations
+- High binary feature sparsity — many features are rarely active across the dataset
+- No feature labels available due to full anonymization, limiting interpretability
+
+**Data risk:** Because features are fully anonymized, we cannot validate what each column represents (e.g. is Feature X a safety sensor or a trim option?). This limits explainability but does not affect predictive performance.
+
+See `notebooks/01_EDA.ipynb` for full analysis.
 
 ---
 
 ## 5. ML Framing & Metrics
-* **Problem Type:** Regression (Supervised Learning).
-* **Primary Evaluation Metric:** Coefficient of Determination ($R^2$).
-    * *Justification:* $R^2$ represents the proportion of variance in testing time explained by our model, directly correlating to how much "uncertainty" we remove for the scheduler.
-* **Baseline:** Mean Testing Time (Predicting the average for every car).
-* **Key Trade-offs:**
-    * **Accuracy vs. Interpretability:** We prioritize Accuracy ($R^2$) over interpretability since features are already anonymized.
+
+**Problem type:** Supervised regression
+
+**Primary metric:** R² (Coefficient of Determination)
+> R² represents the proportion of variance in test bench time explained by the model — directly correlating to how much scheduling uncertainty is removed.
+
+**Baseline:** Mean testing time (predicting the average for every car) → R² = 0.00
+
+**Key trade-off:** Accuracy over interpretability. Since features are already anonymized, there is no benefit to using interpretable models — we optimise purely for predictive performance.
 
 ---
 
 ## 6. Model Experiment Log
-*Tracking iterative improvements.*
 
-| Experiment | Change / Hypothesis | Result ($R^2$) | Decision |
-| :--- | :--- | :--- | :--- |
-| **1.0 Baseline** | Calculate mean of train set | 0.00 | **Benchmark** |
-| **1.1 XGBoost** | [TODO: Describe initial hyperparams] | [TODO] | [TODO: Keep/Discard] |
-| **1.2 Feature Eng**| [TODO: e.g., PCA decomposition] | [TODO] | [TODO] |
+| Experiment | Model | Notes | R² |
+|---|---|---|---|
+| 1.0 | Baseline (mean) | Predict average for all cars | 0.00 |
+| 1.1 | Linear Regression | Initial benchmark, assumes linear relationships | TBD |
+| 1.2 | Random Forest | Handles non-linearity, robust to outliers | TBD |
+| 1.3 | XGBoost | Gradient boosting, expected best performer | TBD |
+
+> **Note:** Model experiments are in progress. Results will be updated as experiments complete. See `notebooks/` for current state.
 
 ---
 
 ## 7. Ethical, Risk & Failure Analysis
-*What happens when the model is wrong?*
 
-* **Bias & Fairness:**
-    * *Risk:* The model might systematically overestimate time for specific car configurations (e.g., budget models), leading to deprioritization in the queue.
-    * *Mitigation:* Analyze residual errors across different feature clusters.
-* **Failure Modes & Edge Cases:**
-    * *Scenario:* Model predicts 50s, actual test takes 200s.
-    * *Impact:* Scheduling conflict; assembly line backup.
-    * *Mitigation Strategy:* Implement a "buffer time" based on prediction confidence intervals.
+**Bias & Fairness Risk:**
+The model might systematically overestimate time for specific car configurations, leading to deprioritization in the production queue. Mitigation: analyse residual errors across different feature clusters to detect systematic bias.
+
+**Key Failure Scenario:**
+
+| Scenario | Impact | Mitigation |
+|---|---|---|
+| Model predicts 50s, actual is 200s | Scheduling conflict, assembly line backup | Add buffer time based on prediction confidence intervals |
+| Model degrades over time (data drift) | Silent performance drop | Monitor R² weekly, retrain if it drops below 0.50 for two consecutive weeks |
 
 ---
 
-## 8. Post-Launch Plan & Iteration Roadmap
-*Lifecycle Management.*
+## 8. Post-Launch Plan
 
-* **Monitoring Trigger:** Retrain model if $R^2$ drops below 0.50 for two consecutive weeks.
-* **Rollback Strategy:** If inference latency exceeds 100ms or errors spike, revert immediately to the **Mean Baseline** model.
-* **Next Data to Collect:** Request non-anonymized metadata for "outlier" cars that take >200s to test.
+**Monitoring trigger:** Retrain if R² drops below 0.50 for two consecutive weeks.
+
+**Rollback strategy:** If inference latency exceeds 100ms or errors spike, revert immediately to the mean baseline model.
+
+**Next iteration:** Request non-anonymized metadata for outlier cars (test time >200s) to improve model interpretability and edge case handling.
 
 ---
 
 ## 9. Repository Structure
 
-```text
-├── data/               # Raw and processed data
-├── notebooks/          # Analysis and Prototyping
-│   └── 01_EDA.ipynb    # Data Understanding & Feasibility
-├── src/                # Modular code
-├── README.md           # Product & Technical Documentation
-└── requirements.txt    # Dependencies
+```
+AIPM_ML-Project_Mercedes-Benz/
+├── data/                  # Raw and processed data
+├── notebooks/
+│   └── 01_EDA.ipynb       # Data understanding & feasibility analysis
+├── src/                   # Modular source code
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 10. Project Background
+
+Built as part of the **AIPM Bootcamp** (neuefische, Cohort 1 · 2025/26) — a team project of three, structured as a real product initiative rather than a pure ML exercise.
+
+The goal was to apply full PM methodology to an ML project: writing a PRD, defining OKRs and KPIs before touching any data, mapping model metrics to business outcomes, and planning for post-launch monitoring and failure scenarios.
+
+The Kaggle dataset was chosen because its anonymization mirrors real-world constraints — where data science teams often work with features they cannot fully explain to stakeholders.
+
+---
+
+## Team
+
+Built with teammates from the AIPM Bootcamp Cohort 1 · neuefische 2025/26
+
+**Sebastian** (PM Lead & ML)
+[GitHub](https://github.com/SebastiansJourney) · [LinkedIn](https://www.linkedin.com/in/sebastian-plum-aipm)
